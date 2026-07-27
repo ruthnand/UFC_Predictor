@@ -1,1 +1,343 @@
-IyBCeXRlLWNvbXBpbGVkIC8gb3B0aW1pemVkIC8gRExMIGZpbGVzCl9fcHljYWNoZV9fLwoqLnB5W2NvZF0KKiRweS5jbGFzcwoKIyBDIGV4dGVuc2lvbnMKKi5zbwoKIyBQYXNzd29yZHMKYWNjZXNzX2tleXMudHh0CgojIERpc3RyaWJ1dGlvbiAvIHBhY2thZ2luZwouUHl0aG9uCmJ1aWxkLwpkZXZlbG9wLWVnZ3MvCmRpc3QvCmRvd25sb2Fkcy8KZWdncy8KLmVnZ3MvCmxpYi8KbGliNjQvCnBhcnRzLwpzZGlzdC8KdmFyLwp3aGVlbHMvCnNoYXJlL3B5dGhvbi13aGVlbHMvCiouZWdnLWluZm8vCi5pbnN0YWxsZWQuY2ZnCiouZWdnCk1BTklGRVNUCgojIFB5SW5zdGFsbGVyCiMgIFVzdWFsbHkgdGhlc2UgZmlsZXMgYXJlIHdyaXR0ZW4gYnkgYSBweXRob24gc2NyaXB0IGZyb20gYSB0ZW1wbGF0ZQojICBiZWZvcmUgUHlJbnN0YWxsZXIgYnVpbGRzIHRoZSBleGUsIHNvIGFzIHRvIGluamVjdCBkYXRlL290aGVyIGluZm9zIGludG8gaXQuCioubWFuaWZlc3QKKi5zcGVjCgojIEluc3RhbGxlciBsb2dzCnBpcC1sb2cudHh0CnBpcC1kZWxldGUtdGhpcy1kaXJlY3RvcnkudHh0CgojIFVuaXQgdGVzdCAvIGNvdmVyYWdlIHJlcG9ydHMKaHRtbGNvdi8KLnRveC8KLm5veC8KLmNvdmVyYWdlCi5jb3ZlcmFnZS4qCi5jYWNoZQpub3NldGVzdHMueG1sCmNvdmVyYWdlLnhtbAoqLmNvdmVyCioucHksY292ZXIKLmh5cG90aGVzaXMvCi5weXRlc3RfY2FjaGUvCmNvdmVyLwoKIyBUcmFuc2xhdGlvbnMKKi5tbwoqLnBvdAoKIyBEamFuZ28gc3R1ZmY6CioubG9nCmxvY2FsX3NldHRpbmdzLnB5CmRiLnNxbGl0ZTMKZGIuc3FsaXRlMy1qb3VybmFsCgojIEZsYXNrIHN0dWZmOgppbnN0YW5jZS8KLndlYmFzc2V0cy1jYWNoZQoKIyBTY3JhcHkgc3R1ZmY6Ci5zY3JhcHkKCiMgU3BoaW54IGRvY3VtZW50YXRpb24KZG9jcy9fYnVpbGQvCgojIFB5QnVpbGRlcgoucHlidWlsZGVyLwp0YXJnZXQvCgojIEp1cHl0ZXIgTm90ZWJvb2sKLmlweW5iX2NoZWNrcG9pbnRzCgojIElQeXRob24KcHJvZmlsZV9kZWZhdWx0LwppcHl0aG9uX2NvbmZpZy5weQoKIyBweWVudgojICAgRm9yIGEgbGlicmFyeSBvciBwYWNrYWdlLCB5b3UgbWlnaHQgd2FudCB0byBpZ25vcmUgdGhlc2UgZmlsZXMgc2luY2UgdGhlIGNvZGUgaXMKIyAgIGludGVuZGVkIHRvIHJ1biBpbiBtdWx0aXBsZSBlbnZpcm9ubWVudHM7IG90aGVyd2lzZSwgY2hlY2sgdGhlbSBpbjoKIyAucHl0aG9uLXZlcnNpb24KCiMgcGlwZW52CiMgICBBY2NvcmRpbmcgdG8gcHlwYS9waXBlbnYjNTk4LCBpdCBpcyByZWNvbW1lbmRlZCB0byBpbmNsdWRlIFBpcGZpbGUubG9jayBpbiB2ZXJzaW9uIGNvbnRyb2wuCiMgICBIb3dldmVyLCBpbiBjYXNlIG9mIGNvbGxhYm9yYXRpb24sIGlmIGhhdmluZyBwbGF0Zm9ybS1zcGVjaWZpYyBkZXBlbmRlbmNpZXMgb3IgZGVwZW5kZW5jaWVzCiMgICBoYXZpbmcgbm8gY3Jvc3MtcGxhdGZvcm0gc3VwcG9ydCwgcGlwZW52IG1heSBpbnN0YWxsIGRlcGVuZGVuY2llcyB0aGF0IGRvbid0IHdvcmssIG9yIG5vdAojICAgaW5zdGFsbCBhbGwgbmVlZGVkIGRlcGVuZGVuY2llcy4KI1BpcGZpbGUubG9jawoKIyBwb2V0cnkKIyAgIFNpbWlsYXIgdG8gUGlwZmlsZS5sb2NrLCBpdCBpcyBnZW5lcmFsbHkgcmVjb21tZW5kZWQgdG8gaW5jbHVkZSBwb2V0cnkubG9jayBpbiB2ZXJzaW9uIGNvbnRyb2wuCiMgICBUaGlzIGlzIGVzcGVjaWFsbHkgcmVjb21tZW5kZWQgZm9yIGJpbmFyeSBwYWNrYWdlcyB0byBlbnN1cmUgcmVwcm9kdWNpYmlsaXR5LCBhbmQgaXMgbW9yZQojICAgY29tbW9ubHkgaWdub3JlZCBmb3IgbGlicmFyaWVzLgojICAgaHR0cHM6Ly9weXRob24tcG9ldHJ5Lm9yZy9kb2NzL2Jhc2ljLXVzYWdlLyNjb21taXQteW91ci1wb2V0cnlsb2NrLWZpbGUtdG8tdmVyc2lvbi1jb250cm9sCiNwb2V0cnkubG9jawoKIyBwZG0KIyAgIFNpbWlsYXIgdG8gUGlwZmlsZS5sb2NrLCBpdCBpcyBnZW5lcmFsbHkgcmVjb21tZW5kZWQgdG8gaW5jbHVkZSBwZG0ubG9jayBpbiB2ZXJzaW9uIGNvbnRyb2wuCiNwZG0ubG9jawojICAgcGRtIHN0b3JlcyBwcm9qZWN0LXdpZGUgY29uZmlndXJhdGlvbnMgaW4gLnBkbS50b21sLCBidXQgaXQgaXMgcmVjb21tZW5kZWQgdG8gbm90IGluY2x1ZGUgaXQKIyAgIGluIHZlcnNpb24gY29udHJvbC4KIyAgIGh0dHBzOi8vcGRtLmZtaW5nLmRldi8jdXNlLXdpdGgtaWRlCi5wZG0udG9tbAoKIyBQRVAgNTgyOyB1c2VkIGJ5IGUuZy4gZ2l0aHViLmNvbS9EYXZpZC1PQ29ubm9yL3B5ZmxvdyBhbmQgZ2l0aHViLmNvbS9wZG0tcHJvamVjdC9wZG0KX19weXBhY2thZ2VzX18vCgojIENlbGVyeSBzdHVmZgpjZWxlcnliZWF0LXNjaGVkdWxlCmNlbGVyeWJlYXQucGlkCgojIFNhZ2VNYXRoIHBhcnNlZCBmaWxlcwoqLnNhZ2UucHkKCiMgRW52aXJvbm1lbnRzCi5lbnYKIyBCeXRlLWNvbXBpbGVkIC8gb3B0aW1pemVkIC8gRExMIGZpbGVzCl9fcHljYWNoZV9fLwoqLnB5W2NvZF0KKiRweS5jbGFzcwoKIyBDIGV4dGVuc2lvbnMKKi5zbwoKIyBEaXN0cmlidXRpb24gLyBwYWNrYWdpbmcKLlB5dGhvbgpidWlsZC8KZGV2ZWxvcC1lZ2dzLwpkaXN0Lwpkb3dubG9hZHMvCmVnZ3MvCi5lZ2dzLwpsaWIvCmxpYjY0LwpwYXJ0cy8Kc2Rpc3QvCnZhci8Kd2hlZWxzLwpzaGFyZS9weXRob24td2hlZWxzLwoqLmVnZy1pbmZvLwouaW5zdGFsbGVkLmNmZwoqLmVnZwpNQU5JRkVTVAoKIyBQeUluc3RhbGxlcgojICBVc3VhbGx5IHRoZXNlIGZpbGVzIGFyZSB3cml0dGVuIGJ5IGEgcHl0aG9uIHNjcmlwdCBmcm9tIGEgdGVtcGxhdGUKIyAgYmVmb3JlIFB5SW5zdGFsbGVyIGJ1aWxkcyB0aGUgZXhlLCBzbyBhcyB0byBpbmplY3QgZGF0ZS9vdGhlciBpbmZvcyBpbnRvIGl0LgoqLm1hbmlmZXN0Ciouc3BlYwoKIyBJbnN0YWxsZXIgbG9ncwpwaXAtbG9nLnR4dApwaXAtZGVsZXRlLXRoaXMtZGlyZWN0b3J5LnR4dAoKIyBVbml0IHRlc3QgLyBjb3ZlcmFnZSByZXBvcnRzCmh0bWxjb3YvCi50b3gvCi5ub3gvCi5jb3ZlcmFnZQouY292ZXJhZ2UuKgouY2FjaGUKbm9zZXRlc3RzLnhtbApjb3ZlcmFnZS54bWwKKi5jb3ZlcgoqLnB5LGNvdmVyCi5oeXBvdGhlc2lzLwoucHl0ZXN0X2NhY2hlLwpjb3Zlci8KCiMgVHJhbnNsYXRpb25zCioubW8KKi5wb3QKCiMgRGphbmdvIHN0dWZmOgoqLmxvZwpsb2NhbF9zZXR0aW5ncy5weQpkYi5zcWxpdGUzCmRiLnNxbGl0ZTMtam91cm5hbAoKIyBGbGFzayBzdHVmZjoKaW5zdGFuY2UvCi53ZWJhc3NldHMtY2FjaGUKCiMgU2NyYXB5IHN0dWZmOgouc2NyYXB5CgojIFNwaGlueCBkb2N1bWVudGF0aW9uCmRvY3MvX2J1aWxkLwoKIyBQeUJ1aWxkZXIKLnB5YnVpbGRlci8KdGFyZ2V0LwoKIyBKdXB5dGVyIE5vdGVib29rCi5pcHluYl9jaGVja3BvaW50cwoKIyBJUHl0aG9uCnByb2ZpbGVfZGVmYXVsdC8KaXB5dGhvbl9jb25maWcucHkKCiMgcHllbnYKIyAgIEZvciBhIGxpYnJhcnkgb3IgcGFja2FnZSwgeW91IG1pZ2h0IHdhbnQgdG8gaWdub3JlIHRoZXNlIGZpbGVzIHNpbmNlIHRoZSBjb2RlIGlzCiMgICBpbnRlbmRlZCB0byBydW4gaW4gbXVsdGlwbGUgZW52aXJvbm1lbnRzOyBvdGhlcndpc2UsIGNoZWNrIHRoZW0gaW46CiMgLnB5dGhvbi12ZXJzaW9uCgojIHBpcGVudgojICAgQWNjb3JkaW5nIHRvIHB5cGEvcGlwZW52IzU5OCwgaXQgaXMgcmVjb21tZW5kZWQgdG8gaW5jbHVkZSBQaXBmaWxlLmxvY2sgaW4gdmVyc2lvbiBjb250cm9sLgojICAgSG93ZXZlciwgaW4gY2FzZSBvZiBjb2xsYWJvcmF0aW9uLCBpZiBoYXZpbmcgcGxhdGZvcm0tc3BlY2lmaWMgZGVwZW5kZW5jaWVzIG9yIGRlcGVuZGVuY2llcwojICAgaGF2aW5nIG5vIGNyb3NzLXBsYXRmb3JtIHN1cHBvcnQsIHBpcGVudiBtYXkgaW5zdGFsbCBkZXBlbmRlbmNpZXMgdGhhdCBkb24ndCB3b3JrLCBvciBub3QKIyAgIGluc3RhbGwgYWxsIG5lZGVkIGRlcGVuZGVuY2llcy4KI1BpcGZpbGUubG9jawoKIyBwb2V0cnkKIyAgIFNpbWlsYXIgdG8gUGlwZmlsZS5sb2NrLCBpdCBpcyBnZW5lcmFsbHkgcmVjb21tZW5kZWQgdG8gaW5jbHVkZSBwb2V0cnkubG9jayBpbiB2ZXJzaW9uIGNvbnRyb2wuCiMgICBUaGlzIGlzIGVzcGVjaWFsbHkgcmVjb21tZW5kZWQgZm9yIGJpbmFyeSBwYWNrYWdlcyB0byBlbnN1cmUgcmVwcm9kdWNpYmlsaXR5LCBhbmQgaXMgbW9yZQojICAgY29tbW9ubHkgaWdub3JlZCBmb3IgbGlicmFyaWVzLgojICAgaHR0cHM6Ly9weXRob24tcG9ldHJ5Lm9yZy9kb2NzL2Jhc2ljLXVzYWdlLyNjb21taXQteW91ci1wb2V0cnlsb2NrLWZpbGUtdG8tdmVyc2lvbi1jb250cm9sCiNwb2V0cnkubG9jawoKIyBwZG0KIyAgIFNpbWlsYXIgdG8gUGlwZmlsZS5sb2NrLCBpdCBpcyBnZW5lcmFsbHkgcmVjb21tZW5kZWQgdG8gaW5jbHVkZSBwZG0ubG9jayBpbiB2ZXJzaW9uIGNvbnRyb2wuCiNwZG0ubG9jawojICAgcGRtIHN0b3JlcyBwcm9qZWN0LXdpZGUgY29uZmlndXJh dGlvbnMgaW4gLnBkbS50b21sLCBidXQgaXQgaXMgcmVjb21tZW5kZWQgdG8gbm90IGluY2x1ZGUgaXQKIyAgIGluIHZlcnNpb24gY29udHJvbC4KIyAgIGh0dHBzOi8vcGRtLmZtaW5nLmRldi8jdXNlLXdpdGgtaWRlCi5wZG0udG9tbAoKIyBQRVAgNTgyOyB1c2VkIGJ5IGUuZy4gZ2l0aHViLmNvbS9EYXZpZC1PQ29ubm9yL3B5ZmxvdyBhbmQgZ2l0aHViLmNvbS9wZG0tcHJvamVjdC9wZG0KX19weXBhY2thZ2VzX18vCgojIENlbGVyeSBzdHVmZgpjZWxlcnliZWF0LXNjaGVkdWxlCmNlbGVyeWJlYXQucGlkCgojIFNhZ2VNYXRoIHBhcnNlZCBmaWxlcwoqLnNhZ2UucHkKCiMgRW52aXJvbm1lbnRzCi5lbnYKL nZlbnY KZW52Lwp2ZW52LwpFTlYvCmVudi5iYWsvCnZlbnYuYmFrLwoKIyBTcHlkZXIgcHJvamVjdCBzZXR0aW5ncwouc3B5ZGVycHJvamVjdAouc3B5cHJvamVjdAoKIyBSb3BlIHByb2plY3Qgc2V0dGluZ3MKLnJvcGVwcm9qZWN0CgojIG1rZG9jcyBkb2N1bWVudGF0aW9uCi9zaXRlCgojIG15cHkKLm15cHlfY2FjaGUvCi5kbXlweS5qc29uCmRteXB5Lmpzb24KZGF0YS9kYXRhLmpzb24KCiMgUHlyZSB0eXBlIGNoZWNrZXIKLnB5cmUvCgojIHB5dHlwZSBzdGF0aWMgdHlwZSBhbmFseXplcgoucHl0eXBlLwoKIyBDeXRob24gZGVidWcgc3ltYm9scwpjeXRob25fZGVidWcvCgojIFB5Q2hhcm0KIyAgSmV0QnJhaW5zIHNwZWNpZmljIHRlbXBsYXRlIGlzIG1haW50YWluZWQgaW4gYSBzZXBhcmF0ZSBKZXRCcmFpbnMuZ2l0aWdub3JlIHRoYXQgY2FuCiMgIGJlIGZvdW5kIGF0IGh0dHBzOi8vZ2l0aHViLmNvbS9naXRodWIvZ2l0aWdub3JlL2Jsb2IvbWFpbi9HbG9iYWwvSmV0QnJhaW5zLmdpdGlnbm9yZQojICBhbmQgY2FuIGJlIGFkZGVkIHRvIHRoZSBnbG9iYWwgZ2l0aWdub3JlIG9yIG1lcmdlZCBpbnRvIHRoaXMgZmlsZS4gIEZvciBhIG1vcmUgbnVjbGVhcgojICBvcHRpb24gKG5vdCByZWNvbW1lbmRlZCkgeW91IGNhbiB1bmNvbW1lbnQgdGhlIGZvbGxvd2luZyB0byBpZ25vcmUgdGhlIGVudGlyZSBpZGVhIGZvbGRlci4KIy5pZGVhLwoKIyBMb2NhbCBzZWNyZXRzIGFuZCBjb25maWd1cmF0aW9uCi5lbnYuKgohLmVudi5leGFtcGxlCmFjY2Vzc19rZXlzLioKc2VjcmV0cy4qCgojIExvY2FsIGRhdGFiYXNlcyBhbmQgZ2VuZXJhdGVkIGRhdGFzZXRzCiouZGIKKi5kYi1qb3VybmFsCiouc3FsaXRlCiouc3FsaXRlLWpvdXJuYWwKKi5zcWxpdGUzCiouc3FsaXRlMy1qb3VybmFsCmZpZ2h0X2RhdGFzZXQqLmNzdgoqX2NhY2hlLmpzb24KCiMgTG9jYWwgdG9vbGluZyBhbmQgT1MgZmlsZXMKLkRTX1N0b3JlCi5pZGVhLwoudnNjb2RlLwpVRkNfVkVOVi8K
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Passwords
+access_keys.txt
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+data/data.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/
+
+# Local secrets and configuration
+.env.*
+!.env.example
+access_keys.*
+secrets.*
+
+# Local databases and generated datasets
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-journal
+fight_dataset*.csv
+*_cache.json
+
+# Local tooling and OS files
+.DS_Store
+.idea/
+.vscode/
+UFC_VENV/
