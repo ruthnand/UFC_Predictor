@@ -320,3 +320,24 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Local secrets and configuration
+.env.*
+!.env.example
+access_keys.*
+secrets.*
+
+# Local databases and generated datasets
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-journal
+fight_dataset*.csv
+*_cache.json
+
+# Local tooling and OS files
+.DS_Store
+.idea/
+.vscode/
+UFC_VENV/
