@@ -6,6 +6,7 @@ import json
 import re
 import sys
 from top_fighters import UFCRankingScraper
+from fight_history import FightHistoryExtractor
 import csv
 import pandas as pd
 
@@ -21,7 +22,7 @@ class FighterStatsExtractor:
         headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        page = requests.get(url, headers=headers)
+        page = requests.get(url, headers=headers, timeout=20)
         content = page.text
         soup = BeautifulSoup(content, 'lxml')
         bio_title = [b.get_text() for b in soup.find_all('div', class_='c-bio__label')]
@@ -90,14 +91,14 @@ class FighterStatsExtractor:
         headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        page = requests.get(url, headers=headers)
+        page = requests.get(url, headers=headers, timeout=20)
         content = page.text
         soup = BeautifulSoup(content, 'lxml')
-        name = soup.find('h1', class_="hero-profile__name") 
-        if name:
+        name = soup.find('h1', class_="hero-profile__name")
+        if name and name.get_text().strip():
             parts = name.get_text().strip().split()
         else:
-            print("Name not found")
+            return None
         # Split the name into first, middle, and last name
         first_name = middle_name = last_name = None
         if parts:
@@ -114,32 +115,36 @@ class FighterStatsExtractor:
                 middle_name = " ".join(parts[1:-1])
         age = soup.find('div', class_="field field--name-age field--type-integer field--label-hidden field__item")
         physique = soup.find_all('div', class_="c-bio__text")
-        print(physique)
         winning_stats = soup.find_all('div', class_="athlete-stats__stat")
         division_elem = soup.find('p', class_="hero-profile__division-title")
         strikes = soup.find_all('dd', class_="c-overlap__stats-value")
         length_of_strikes = len(strikes)        
         significant_strikes = soup.find_all('div', class_="c-stat-compare__number")
         record_elem = soup.find('p', class_="hero-profile__division-body")
-        # print(self.extract_physique(physique))
+
+        def strike_at(index):
+            return strikes[index].get_text() if index < len(strikes) else None
+
+        def sig_strike_at(index):
+            return self.remove_unwanted_spaces(significant_strikes[index].get_text()) \
+                if index < len(significant_strikes) else None
+
         fighter_stats = {
             'first_name': first_name,
             'middle_name': middle_name,
             'last_name': last_name,
             'age': age.get_text() if age else None, 
             'divsion': division_elem.get_text() if division_elem else None,
-            # 'physique': self.extract_physique(physique),
-            # 'record': self.extract_records(record_elem.get_text() if record_elem else ''),
             'knockouts': None,
             'submissions': None,
             'FRF': None,
-            'strikes_landed': strikes[0].get_text(),
-            'strikes_attemped': strikes[1].get_text(),
-            'strike_accuracy': self.calculate_striking_accruacy(strikes),
-            'sig_str_landed_per_min': self.remove_unwanted_spaces(significant_strikes[0].get_text()),
-            'sig_str_absorbed_per_min': self.remove_unwanted_spaces(significant_strikes[1].get_text()),
-            'takedown_avg': self.remove_unwanted_spaces(significant_strikes[2].get_text()),
-            'submission_avg': self.remove_unwanted_spaces(significant_strikes[3].get_text()),
+            'strikes_landed': strike_at(0),
+            'strikes_attemped': strike_at(1),
+            'strike_accuracy': self.calculate_striking_accruacy(strikes) if len(strikes) >= 2 else 0,
+            'sig_str_landed_per_min': sig_strike_at(0),
+            'sig_str_absorbed_per_min': sig_strike_at(1),
+            'takedown_avg': sig_strike_at(2),
+            'submission_avg': sig_strike_at(3),
             'takedown_landed': strikes[2].get_text() if length_of_strikes == 4 else None,
             'takedown_attempted': strikes[3].get_text() if length_of_strikes == 4 else None,
             'takedown_accuracy': self.calculate_takedown_accuracy(strikes)
@@ -164,6 +169,11 @@ class FighterStatsExtractor:
 
         return fighter_stats
     
+    def get_fight_history(self, fighterFirstName, fighterMiddleName, fighterLastName):
+        return FightHistoryExtractor().get_fight_history(
+            fighterFirstName, fighterMiddleName, fighterLastName
+        )
+
     def add_to_csv(self, fighter_stats):
         df = pd.DataFrame([fighter_stats])
         df.to_csv('fighter_stats.csv', index=False)

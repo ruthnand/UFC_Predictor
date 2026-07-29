@@ -1,0 +1,6 @@
+# Extra dependencies only needed to RE-SCRAPE ufcstats.com and rebuild the
+# dataset (python train.py --scrape). The deployed app does not need these; it
+# serves the committed models + fighter_state.json.
+#
+# After installing, fetch the browser once:  python -m playwright install chromium
+playwright==1.49.0

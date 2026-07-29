@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UFC Predictor — Fight Models for Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #07080c;
+    --panel: rgba(18, 20, 28, 0.92);
+    --panel-2: #151821;
+    --line: #2a2f3c;
+    --text: #f2f4f7;
+    --muted: #9aa3b2;
+    --red: #e10600;
+    --red-soft: #ff3b3b;
+    --blue: #2f81f7;
+    --gold: #e8b923;
+    --green: #2ec16b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: "Barlow", sans-serif;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(225,6,0,.18), transparent 55%),
+      radial-gradient(ellipse 70% 45% at 85% 10%, rgba(47,129,247,.12), transparent 50%),
+      linear-gradient(180deg, #0c0e14 0%, #07080c 40%, #05060a 100%);
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 18px 28px; border-bottom: 1px solid var(--line);
+    background: rgba(7,8,12,.75); backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .brand {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: 1px; line-height: 1; margin: 0;
+  }
+  .brand .u { color: var(--red); font-style: italic; margin-right: 6px; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tab {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    font-size: 14px; padding: 10px 14px; color: var(--muted);
+    background: transparent; border: 0; border-bottom: 2px solid transparent;
+    cursor: pointer;
+  }
+  .tab.active { color: #fff; border-bottom-color: var(--red); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 24px 18px 72px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .search-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px; margin-bottom: 18px;
+  }
+  .search-card h2 {
+    font-family: "Barlow Condensed", sans-serif; text-transform: uppercase;
+    letter-spacing: .06em; font-size: 18px; margin: 0 0 14px;
+  }
+  .row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: end; }
+  .vs {
+    font-family: "Bebas Neue", sans-serif; color: var(--gold); font-size: 28px;
+    padding-bottom: 8px; text-align: center;
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: .04em; text-transform: uppercase; }
+  .suggest-wrap { position: relative; }
+  input {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
+    font-size: 15px; font-family: inherit;
+  }
+  input:focus { outline: 1px solid var(--red); border-color: var(--red); }
+  .suggest {
+    position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+    background: #12141c; border: 1px solid var(--line); border-radius: 10px;
+    z-index: 15; max-height: 220px; overflow: auto; display: none;
+  }
+  .suggest.open { display: block; }
+  .suggest button {
+    display: block; width: 100%; text-align: left; padding: 10px 12px;
+    background: transparent; border: 0; color: var(--text); cursor: pointer; font: inherit;
+  }
+  .suggest button:hover { background: #1c2030; }
+  .suggest .meta { color: var(--muted); font-size: 12px; margin-left: 8px; }
+  button.go {
+    margin-top: 14px; padding: 12px 22px; border: 0; border-radius: 10px;
+    background: linear-gradient(180deg, #ff2a2a, var(--red)); color: #fff;
+    font-family: "Barlow Condensed", sans-serif; font-size: 16px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; cursor: pointer;
+  }
+  button.go:disabled { opacity: .5; cursor: default; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .fight-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    padding: 22px; margin-bottom: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  .bout-badge {
+    display: inline-block; margin: 0 auto 16px; padding: 6px 18px;
+    background: linear-gradient(180deg, #f0c84a, var(--gold));
+    color: #1a1400; font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%);
+  }
+  .tape {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: center;
+    margin-bottom: 20px;
+  }
+  .corner { text-align: center; }
+  .avatar {
+    width: 120px; height: 120px; margin: 0 auto 10px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: "Bebas Neue", sans-serif; font-size: 42px; color: #fff;
+    background: radial-gradient(circle at 35% 30%, #3a3f4f, #12141c 70%);
+  }
+  .avatar.red { box-shadow: 0 0 0 3px rgba(225,6,0,.75), 0 0 28px rgba(225,6,0,.35); }
+  .avatar.blue { box-shadow: 0 0 0 3px rgba(47,129,247,.75), 0 0 28px rgba(47,129,247,.3); }
+  .fighter-name {
+    font-family: "Bebas Neue", sans-serif; font-size: clamp(22px, 3vw, 30px);
+    letter-spacing: .5px; margin: 0;
+  }
+  .corner.red .fighter-name { color: #ffb4b0; }
+  .corner.blue .fighter-name { color: #b7d3ff; }
+  .mid-vs {
+    font-family: "Bebas Neue", sans-serif; font-size: 42px; color: var(--gold);
+    text-align: center; text-shadow: 0 0 20px rgba(232,185,35,.35);
+  }
+  .tape-rows { margin-top: 14px; }
+  .tape-row {
+    display: grid; grid-template-columns: 1fr 90px 1fr; gap: 8px;
+    align-items: center; padding: 6px 0; border-bottom: 1px solid #222633;
+    font-size: 14px;
+  }
+  .tape-row .lab {
+    text-align: center; color: var(--muted); font-size: 11px;
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  .tape-row .l { text-align: right; color: #ffb4b0; font-weight: 600; }
+  .tape-row .r { text-align: left; color: #b7d3ff; font-weight: 600; }
+  .pick-banner {
+    text-align: center; padding: 18px 16px; margin: 8px 0 18px;
+    border-radius: 12px; border: 1px solid #4a1717;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(225,6,0,.25), transparent 65%),
+      #120c10;
+  }
+  .pick-banner .pick {
+    font-family: "Bebas Neue", sans-serif; font-size: clamp(28px, 5vw, 42px);
+    color: var(--red-soft); letter-spacing: 1px; margin: 0;
+  }
+  .pick-banner .finish {
+    margin: 8px 0 4px; color: var(--gold);
+    font-family: "Barlow Condensed", sans-serif; font-size: 18px;
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+  .pick-banner .finish::before, .pick-banner .finish::after {
+    content: ""; display: inline-block; width: 42px; height: 1px;
+    background: var(--gold); vertical-align: middle; margin: 0 10px; opacity: .7;
+  }
+  .pick-banner .wp {
+    font-size: 14px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase;
+  }
+  .method-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px;
+  }
+  .method-chip {
+    background: #10131a; border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 8px; text-align: center;
+  }
+  .method-chip .k {
+    display: block; font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .method-chip .v { font-family: "Bebas Neue", sans-serif; font-size: 22px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .model-box {
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px;
+  }
+  .model-box h3 {
+    margin: 0 0 4px; font-family: "Barlow Condensed", sans-serif;
+    letter-spacing: .06em; text-transform: uppercase; font-size: 14px;
+  }
+  .prob { font-family: "Bebas Neue", sans-serif; font-size: 34px; margin: 4px 0; }
+  .bar { height: 8px; background: #0b0d12; border-radius: 6px; overflow: hidden; margin: 8px 0 10px; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--red), var(--red-soft)); }
+  .bar.blue > i { background: linear-gradient(90deg, #1c5fc0, var(--blue)); }
+  .feat-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .feat-tags span {
+    font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+  }
+  .market-strip {
+    display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between;
+    margin-top: 12px; padding: 12px 14px; border-radius: 10px;
+    background: #10131a; border: 1px solid var(--line); font-size: 14px;
+  }
+  .edge-pos { color: var(--green); font-weight: 700; }
+  .edge-neg { color: var(--red-soft); font-weight: 700; }
+  .event-item, .bout {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+    margin-bottom: 8px; background: var(--panel-2);
+  }
+  .event-item:hover { border-color: var(--red); cursor: pointer; }
+  .event-item .title { font-weight: 600; }
+  .pill {
+    font-size: 11px; color: var(--gold); border: 1px solid #4a3f14;
+    padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+  }
+  .division h3 { margin: 0; font-size: 15px; font-family: "Barlow Condensed", sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+  .rank-row { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid #20242e; font-size: 14px; }
+  .rank-row .rk { width: 34px; color: var(--muted); }
+  .champ { color: var(--gold); font-weight: 700; }
+  .spinner { color: var(--muted); font-size: 13px; padding: 10px 0; }
+  .metrics { font-size: 11px; color: var(--muted); margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 8px; }
+  .about-hero {
+    padding: 28px 22px; border-radius: 16px; margin-bottom: 16px;
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(ellipse at 10% 0%, rgba(225,6,0,.2), transparent 50%),
+      var(--panel);
+  }
+  .about-hero h2 {
+    font-family: "Bebas Neue", sans-serif; font-size: clamp(28px, 5vw, 40px);
+    margin: 0 0 8px; letter-spacing: .5px;
+  }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+  .stat {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+  }
+  .stat .n { font-family: "Bebas Neue", sans-serif; font-size: 28px; color: var(--gold); }
+  .stat .l { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .list { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.55; }
+  .list li { margin: 6px 0; }
+  @media (max-width: 760px) {
+    header { flex-direction: column; align-items: flex-start; }
+    .row, .tape, .grid2, .stat-grid, .method-grid { grid-template-columns: 1fr; }
+    .vs, .mid-vs { padding: 4px 0; }
+    .tape-row { grid-template-columns: 1fr 70px 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1 class="brand"><span class="u">UFC</span>PREDICTOR</h1>
+  <nav class="tabs">
+    <button class="tab active" data-tab="predict">Head-to-Head</button>
+    <button class="tab" data-tab="events">Events</button>
+    <button class="tab" data-tab="rankings">Rankings</button>
+    <button class="tab" data-tab="about">About</button>
+    <button class="tab" data-tab="backtest">Backtest</button>
+  </nav>
+</header>
+
+<div class="wrap">
+  <section class="panel active" id="panel-predict">
+    <div class="search-card">
+      <h2>Call a matchup</h2>
+      <div class="row">
+        <div>
+          <label>Fighter A (red)</label>
+          <div class="suggest-wrap">
+            <input id="fa" placeholder="Search fighter…" value="Islam Makhachev" autocomplete="off" />
+            <div class="suggest" id="faSuggest"></div>
+          </div>
+        </div>
+        <div class="vs">VS</div>
+        <div>
+          <label>Fighter B (blue)</label>
+          <div class="suggest-wrap">
+            <input id="fb" placeholder="Search fighter…" value="Charles Oliveira" autocomplete="off" />
+            <div class="suggest" id="fbSuggest"></div>
+          </div>
+        </div>
+      </div>
+      <button class="go" id="predictBtn">Run models</button>
+    </div>
+    <div id="predictOut"></div>
+  </section>
+
+  <section class="panel" id="panel-events">
+    <div class="search-card">
+      <h2>Upcoming events</h2>
+      <div id="eventsList" class="spinner">Loading events…</div>
+    </div>
+    <div id="eventOut"></div>
+  </section>
+
+  <section class="panel" id="panel-rankings">
+    <div class="search-card">
+      <h2>Divisional rankings</h2>
+      <div id="rankingsList" class="spinner">Loading rankings…</div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-about">
+    <div id="aboutOut" class="spinner">Loading model card…</div>
+  </section>
+
+  <section class="panel" id="panel-backtest">
+    <div class="search-card">
+      <h2>Model backtest</h2>
+      <div id="backtestOut" class="spinner">Loading backtest…</div>
+    </div>
+  </section>
+</div>
+
+<script>
+const pct = (x) => x == null || Number.isNaN(x) ? "—" : `${(x * 100).toFixed(1)}%`;
+const el = (tag, cls, html) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html != null) n.innerHTML = html;
+  return n;
+};
+const initials = (name) => (name || "?").split(/\s+/).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "events") loadEvents();
+    if (tab.dataset.tab === "rankings") loadRankings();
+    if (tab.dataset.tab === "about") loadAbout();
+    if (tab.dataset.tab === "backtest") loadBacktest();
+  };
+});
+
+function wireSuggest(inputId, boxId) {
+  const input = document.getElementById(inputId);
+  const box = document.getElementById(boxId);
+  let timer = null;
+  const hide = () => box.classList.remove("open");
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 2) { hide(); box.innerHTML = ""; return; }
+    timer = setTimeout(async () => {
+      try {
+        const data = await (await fetch(`/fighters/search?q=${encodeURIComponent(q)}`)).json();
+        box.innerHTML = "";
+        (data.results || []).forEach(r => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.innerHTML = `${r.name}<span class="meta">Elo ${r.elo ?? "?"} · ${r.experience ?? "?"} fights</span>`;
+          b.onclick = () => { input.value = r.name; hide(); };
+          box.appendChild(b);
+        });
+        if ((data.results || []).length) box.classList.add("open");
+        else hide();
+      } catch (_) { hide(); }
+    }, 180);
+  });
+  input.addEventListener("blur", () => setTimeout(hide, 150));
+}
+wireSuggest("fa", "faSuggest");
+wireSuggest("fb", "fbSuggest");
+
+function tapeRow(label, a, b) {
+  return `<div class="tape-row"><div class="l">${a ?? "—"}</div><div class="lab">${label}</div><div class="r">${b ?? "—"}</div></div>`;
+}
+
+function featureTags(feats) {
+  const wrap = el("div", "feat-tags");
+  (feats || []).slice(0, 3).forEach(f => {
+    const name = (f.feature || "").replace(/_diff$/, "").replace(/_/g, " ");
+    wrap.appendChild(el("span", null, name));
+  });
+  return wrap;
+}
+
+function renderPrediction(data) {
+  if (data.error) return el("div", "fight-card", `<span class="muted">${data.error}${data.query ? ": " + data.query : ""}</span>`);
+  const p = data.prediction, A = data.fighter_a, B = data.fighter_b;
+  const f = data.fighters || {};
+  const final = data.final_prediction || p.final_prediction || {};
+  const consensus = p.consensus_win_probability_a;
+  const winner = final.winner || (consensus >= 0.5 ? A : B);
+  const finish = final.most_likely_finish || final.method || "Decision";
+  const winProb = final.win_probability != null ? final.win_probability : (consensus >= 0.5 ? consensus : 1 - consensus);
+  const methodProbs = final.method_probabilities || {};
+
+  const card = el("div", "fight-card");
+  card.appendChild(el("div", "bout-badge", "Model matchup"));
+
+  const tape = el("div", "tape");
+  const left = el("div", "corner red");
+  left.innerHTML = `<div class="avatar red">${initials(A)}</div><h3 class="fighter-name">${A}</h3>`;
+  const mid = el("div");
+  mid.innerHTML = `<div class="mid-vs">VS</div>`;
+  const right = el("div", "corner blue");
+  right.innerHTML = `<div class="avatar blue">${initials(B)}</div><h3 class="fighter-name">${B}</h3>`;
+  tape.append(left, mid, right);
+  card.appendChild(tape);
+
+  const rows = el("div", "tape-rows");
+  rows.innerHTML =
+    tapeRow("Age", f.a?.age, f.b?.age) +
+    tapeRow("Height", f.a?.height_display, f.b?.height_display) +
+    tapeRow("Reach", f.a?.reach != null ? `${f.a.reach}"` : null, f.b?.reach != null ? `${f.b.reach}"` : null) +
+    tapeRow("Stance", f.a?.stance, f.b?.stance) +
+    tapeRow("Elo", f.a?.elo, f.b?.elo) +
+    tapeRow("Glicko", f.a?.glicko, f.b?.glicko) +
+    tapeRow("Win rate", f.a?.win_rate != null ? pct(f.a.win_rate) : null, f.b?.win_rate != null ? pct(f.b.win_rate) : null);
+  card.appendChild(rows);
+
+  const pick = el("div", "pick-banner");
+  pick.innerHTML =
+    `<p class="pick">PICK: ${winner}</p>` +
+    `<div class="finish">Most likely finish: ${finish}</div>` +
+    `<div class="wp">${pct(winProb)} win probability</div>`;
+  const methods = el("div", "method-grid");
+  ["KO/TKO", "Submission", "Decision"].forEach(k => {
+    methods.appendChild(el("div", "method-chip",
+      `<span class="k">${k}</span><span class="v">${pct(methodProbs[k] || 0)}</span>`));
+  });
+  pick.appendChild(methods);
+  card.appendChild(pick);
+
+  const grid = el("div", "grid2");
+  const xg = p.xgboost || {};
+  const xbox = el("div", "model-box");
+  xbox.appendChild(el("h3", null, "CatBoost / trees"));
+  xbox.appendChild(el("div", "muted", xg.engine || ""));
+  xbox.appendChild(el("div", "prob", pct(xg.win_probability_a)));
+  const xbar = el("div", "bar"); xbar.innerHTML = `<i style="width:${(xg.win_probability_a || 0) * 100}%"></i>`;
+  xbox.appendChild(xbar);
+  xbox.appendChild(featureTags(xg.top_features));
+  grid.appendChild(xbox);
+
+  const by = p.bayesian || {};
+  const bbox = el("div", "model-box");
+  bbox.appendChild(el("h3", null, "Bayesian logistic"));
+  bbox.appendChild(el("div", "muted", "Laplace approx · uncertainty-aware"));
+  bbox.appendChild(el("div", "prob", pct(by.win_probability_a)));
+  const bbar = el("div", "bar blue"); bbar.innerHTML = `<i style="width:${(by.win_probability_a || 0) * 100}%"></i>`;
+  bbox.appendChild(bbar);
+  if (by.credible_interval_90) {
+    const [lo, hi] = by.credible_interval_90;
+    bbox.appendChild(el("div", "muted", `90% interval: ${pct(lo)} – ${pct(hi)}`));
+  }
+  bbox.appendChild(featureTags(by.top_features));
+  grid.appendChild(bbox);
+  card.appendChild(grid);
+
+  if (data.odds) {
+    const o = data.odds;
+    const strip = el("div", "market-strip");
+    if (!o.available) {
+      strip.innerHTML = `<span class="muted">Market odds unavailable — ${o.reason || "set ODDS_API_KEY"}</span>`;
+    } else if (o.implied_probability_a == null) {
+      strip.innerHTML = `<span class="muted">${o.reason || "No odds found for this matchup"}</span>`;
+    } else {
+      const edge = o.model_edge_a;
+      strip.innerHTML =
+        `<span>Market (de-vigged) ${A}: <b>${pct(o.implied_probability_a)}</b></span>` +
+        (edge != null ? `<span>Model edge: <span class="${edge >= 0 ? "edge-pos" : "edge-neg"}">${(edge * 100).toFixed(1)} pts</span></span>` : "") +
+        (o.market_blend_probability_a != null ? `<span>Market blend: <b>${pct(o.market_blend_probability_a)}</b></span>` : "");
+    }
+    card.appendChild(strip);
+  }
+
+  const m = p.metrics || {};
+  card.appendChild(el("div", "metrics",
+    `Holdout accuracy ${m.stacked_test_accuracy != null ? (m.stacked_test_accuracy * 100).toFixed(1) + "%" : "?"} · AUC ${m.stacked_test_auc?.toFixed(3) ?? "?"} · ${m.ensemble_mode || "ensemble"} · finish model is probabilistic (“most likely”), not a guarantee`));
+  return card;
+}
+
+async function runPredict(a, b, mount) {
+  mount.innerHTML = "";
+  mount.appendChild(el("div", "spinner", `Running models for ${a} vs ${b}…`));
+  try {
+    const r = await fetch(`/predict?fighterA=${encodeURIComponent(a)}&fighterB=${encodeURIComponent(b)}`);
+    const data = await r.json();
+    mount.innerHTML = "";
+    mount.appendChild(renderPrediction(data));
+  } catch (e) {
+    mount.innerHTML = `<div class="muted">Prediction failed: ${e}</div>`;
+  }
+}
+
+document.getElementById("predictBtn").onclick = () => {
+  const a = document.getElementById("fa").value.trim();
+  const b = document.getElementById("fb").value.trim();
+  if (a && b) runPredict(a, b, document.getElementById("predictOut"));
+};
+
+let eventsLoaded = false, rankingsLoaded = false, aboutLoaded = false, backtestLoaded = false;
+
+async function loadEvents() {
+  if (eventsLoaded) return; eventsLoaded = true;
+  const list = document.getElementById("eventsList");
+  try {
+    const d = await (await fetch("/events")).json();
+    list.classList.remove("spinner");
+    list.innerHTML = "";
+    const upcoming = d.upcoming || d.events || [];
+    if (!upcoming.length) { list.innerHTML = `<div class="muted">No upcoming events found.</div>`; return; }
+    upcoming.slice(0, 12).forEach(ev => {
+      const row = el("div", "event-item");
+      row.innerHTML = `<div><div class="title">${ev.name || ev.title}</div><div class="muted">${ev.date || ""} ${ev.location || ev.venue || ""}</div></div><span class="pill">Predict card →</span>`;
+      row.onclick = () => predictEvent(ev.slug || ev.id, ev.name);
+      list.appendChild(row);
+    });
+  } catch (e) { list.innerHTML = `<div class="muted">Failed to load events: ${e}</div>`; }
+}
+
+async function predictEvent(slug, name) {
+  const out = document.getElementById("eventOut");
+  out.innerHTML = "";
+  out.appendChild(el("div", "spinner", `Predicting card: ${name || slug}…`));
+  try {
+    const d = await (await fetch(`/predict/event/${encodeURIComponent(slug)}`)).json();
+    out.innerHTML = "";
+    out.appendChild(el("h2", null, d.event || name || slug));
+    (d.predictions || []).forEach(pr => {
+      if (pr.weight_class) out.appendChild(el("div", "muted", pr.weight_class + (pr.title_bout ? " · Title bout" : "")));
+      out.appendChild(renderPrediction(pr.result));
+    });
+  } catch (e) { out.innerHTML = `<div class="muted">Failed: ${e}</div>`; }
+}
+
+async function loadRankings() {
+  if (rankingsLoaded) return; rankingsLoaded = true;
+  const list = document.getElementById("rankingsList");
+  try {
+    const d = await (await fetch("/rankings")).json();
+    list.classList.remove("spinner");
+    list.innerHTML = "";
+    (d.rankings || []).forEach(div => {
+      const box = el("div", "division");
+      box.style.marginBottom = "16px";
+      box.appendChild(el("h3", null, div.division || div.name || "Division"));
+      if (div.champion) box.appendChild(el("div", "rank-row", `<span class="rk">C</span><span class="champ">${div.champion}</span>`));
+      (div.fighters || div.rankings || []).forEach(f => {
+        const name = f.name || f;
+        const rank = f.rank != null ? f.rank : "";
+        box.appendChild(el("div", "rank-row", `<span class="rk">${rank}</span><span>${name}</span>`));
+      });
+      list.appendChild(box);
+    });
+  } catch (e) { list.innerHTML = `<div class="muted">Failed to load rankings: ${e}</div>`; }
+}
+
+async function loadAbout() {
+  if (aboutLoaded) return; aboutLoaded = true;
+  const out = document.getElementById("aboutOut");
+  try {
+    const d = await (await fetch("/about")).json();
+    out.classList.remove("spinner");
+    const rh = d.metrics?.recent_holdout || {};
+    const fc = d.metrics?.forward_chaining || {};
+    const method = d.metrics?.method_of_victory || {};
+    out.innerHTML = `
+      <div class="about-hero">
+        <h2>${d.title}</h2>
+        <p class="muted">${d.tagline}</p>
+        <p>${d.problem}</p>
+        <div class="stat-grid">
+          <div class="stat"><div class="n">${rh.accuracy != null ? (rh.accuracy*100).toFixed(1)+"%" : "—"}</div><div class="l">Recent holdout accuracy</div></div>
+          <div class="stat"><div class="n">${rh.auc != null ? rh.auc.toFixed(3) : "—"}</div><div class="l">Recent holdout AUC</div></div>
+          <div class="stat"><div class="n">${fc.log_loss != null ? fc.log_loss.toFixed(3) : "—"}</div><div class="l">Forward-chaining log-loss</div></div>
+        </div>
+      </div>
+      <div class="fight-card">
+        <h3 style="margin-top:0">Approach</h3>
+        <ul class="list">${(d.approach||[]).map(x => `<li>${x}</li>`).join("")}</ul>
+      </div>
+      <div class="fight-card">
+        <h3 style="margin-top:0">Evaluation</h3>
+        <p class="muted">${rh.description || ""}</p>
+        <p>Ensemble mode: <b>${rh.ensemble_mode || "—"}</b> · engine: <b>${rh.tree_engine || "—"}</b> · train/test ${rh.n_train || "?"} / ${rh.n_test || "?"}</p>
+        <p class="muted">${fc.description || ""}</p>
+        <p>Across eras: accuracy ${fc.accuracy != null ? (fc.accuracy*100).toFixed(1)+"%" : "—"}, AUC ${fc.auc?.toFixed(3) ?? "—"}, baseline log-loss ${fc.baseline_log_loss?.toFixed(3) ?? "—"}.</p>
+        <p class="muted">${method.description || ""}</p>
+        <p>Finish model holdout accuracy ${method.accuracy != null ? (method.accuracy*100).toFixed(1)+"%" : "—"} — useful as a <b>most likely finish</b> distribution, not a hard call.</p>
+      </div>
+      <div class="fight-card">
+        <h3 style="margin-top:0">Limitations</h3>
+        <ul class="list">${(d.limitations||[]).map(x => `<li>${x}</li>`).join("")}</ul>
+      </div>
+      <div class="fight-card">
+        <h3 style="margin-top:0">Stack</h3>
+        <ul class="list">${(d.stack||[]).map(x => `<li>${x}</li>`).join("")}</ul>
+      </div>`;
+  } catch (e) { out.innerHTML = `<div class="muted">Failed to load about: ${e}</div>`; }
+}
+
+async function loadBacktest() {
+  if (backtestLoaded) return; backtestLoaded = true;
+  const out = document.getElementById("backtestOut");
+  try {
+    const d = await (await fetch("/backtest")).json();
+    if (d.error) { out.innerHTML = `<span class="muted">${d.error}</span>`; return; }
+    out.classList.remove("spinner");
+    const m = d.models || {};
+    const fmt = v => v == null ? "—" : v.toFixed(3);
+    let html = `<div class="muted">${d.scheme || ""} · ${d.n_evaluated ?? d.n_rows} rows · engine ${d.tree_engine} · baseline log-loss ${fmt(d.baseline_log_loss)}</div>`;
+    html += `<table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:14px">
+      <tr style="color:var(--muted);text-align:left"><th style="padding:6px">Model</th><th>Accuracy</th><th>AUC</th><th>Log-loss</th><th>Brier</th></tr>`;
+    const label = { tree: "Gradient-boosted trees", bayesian: "Bayesian logistic", consensus: "Ensemble (equal blend)", stacked: "Stacked meta-model" };
+    ["tree", "bayesian", "consensus", "stacked"].forEach(k => {
+      if (!m[k]) return;
+      html += `<tr style="border-top:1px solid var(--line)"><td style="padding:6px">${label[k]}</td>
+        <td>${fmt(m[k].accuracy)}</td><td>${fmt(m[k].auc)}</td><td>${fmt(m[k].log_loss)}</td><td>${fmt(m[k].brier)}</td></tr>`;
+    });
+    html += `</table>
+      <p class="muted">Closer log-loss to zero (and below the baseline) means better-calibrated, more informative probabilities. Finish-type prediction is separate and intentionally framed as “most likely,” not certain.</p>`;
+    out.innerHTML = html;
+  } catch (e) { out.innerHTML = `<span class="muted">Failed to load backtest: ${e}</span>`; }
+}
+</script>
+</body>
+</html>
