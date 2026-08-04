@@ -9,21 +9,3 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.4
-      # Set your The Odds API key in the Render dashboard to enable live odds.
-      - key: ODDS_API_KEY
-        sync: false
-
-  # Weekly data refresh keeps Elo/Glicko/form current.
-  # Note: full scrape needs Playwright + Chromium; on Render free cron this may
-  # exceed time/memory. Prefer running `python refresh_data.py` locally/CI and
-  # redeploying, or upgrade the cron plan and install playwright in build.
-  - type: cron
-    name: ufc-predictor-refresh
-    runtime: python
-    plan: free
-    schedule: "0 10 * * 1"
-    buildCommand: pip install -r requirements.txt -r requirements-train.txt && python -m playwright install --with-deps chromium
-    startCommand: python refresh_data.py
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.13.4
