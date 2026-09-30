@@ -53,6 +53,25 @@ def _prep_fold(Xtr, Xval):
     return build(Xtr), build(Xval)
 
 
+def _time_bounds(df, n_splits):
+    """Return fold boundaries without splitting fights from the same date."""
+    if "date" not in df.columns:
+        return np.linspace(0, len(df), n_splits + 1, dtype=int)
+    dates = df["date"].astype(str).to_numpy()
+    unique_dates = np.unique(dates)
+    date_cuts = np.linspace(0, len(unique_dates), n_splits + 1, dtype=int)
+    return np.asarray([
+        len(df) if cut >= len(unique_dates)
+        else int(np.searchsorted(dates, unique_dates[cut], side="left"))
+        for cut in date_cuts
+    ])
+
+
+def _json_cell(value):
+    """Convert pandas missing values to JSON-safe nulls."""
+    return None if pd.isna(value) else value
+
+
 class Backtester:
     """Forward-chaining (time-based) evaluation: always train on the past and
     validate on the future, mirroring how the model is used in practice. Trees
@@ -69,8 +88,9 @@ class Backtester:
         n = len(y)
 
         # Time-ordered folds; validate on folds 2..K, train on everything prior.
-        bounds = np.linspace(0, n, self.n_splits + 1, dtype=int)
+        bounds = _time_bounds(df, self.n_splits)
         oof_tree, oof_bayes, oof_stacked, covered = [], [], [], []
+        covered_frames = []
         tree_engine = None
 
         for k in range(1, self.n_splits):
@@ -85,7 +105,7 @@ class Backtester:
             # Calibration and the stacking meta-model are fit on pooled inner
             # out-of-fold predictions (base models only ever see earlier rows),
             # mirroring the production training procedure.
-            inner = np.linspace(0, len(Xtr), 5, dtype=int)
+            inner = _time_bounds(df.iloc[:tr_end], 4)
             oof_t, oof_b, oof_y = [], [], []
             for j in range(1, 4):
                 fit_end, ivs, ive = inner[j], inner[j], inner[j + 1]
@@ -111,12 +131,43 @@ class Backtester:
             oof_bayes.append(bayes_va)
             oof_stacked.append(apply_stacker(stacker, tree_va, bayes_va))
             covered.append(yva)
+            covered_frames.append(df.iloc[va_start:va_end].copy())
 
         y_cov = np.concatenate(covered)
         tree_p = np.concatenate(oof_tree)
         bayes_p = np.concatenate(oof_bayes)
         stacked_p = np.concatenate(oof_stacked)
         consensus = (tree_p + bayes_p) / 2.0
+        covered_df = pd.concat(covered_frames, ignore_index=True)
+
+        # One record per real fight. The dataset stores a mirrored pair; label=1
+        # is the winner-oriented row (f1 is the actual winner, f2 the loser).
+        past_predictions = []
+        for i, row in covered_df.iterrows():
+            if int(row["label"]) != 1:
+                continue
+            actual_winner = _json_cell(row.get("f1_name"))
+            actual_loser = _json_cell(row.get("f2_name"))
+            prob_actual = float(consensus[i])
+            correct = prob_actual >= 0.5
+            predicted_winner = actual_winner if correct else actual_loser
+            past_predictions.append({
+                "date": _json_cell(row.get("date")),
+                "event_id": _json_cell(row.get("event_id")),
+                "event": _json_cell(row.get("event_name")) or "UFC Event",
+                "fight_id": _json_cell(row.get("fight_id")),
+                "weight_class": _json_cell(row.get("weight_class")),
+                "fighter_a": actual_winner,
+                "fighter_b": actual_loser,
+                "predicted_winner": predicted_winner,
+                "predicted_probability": float(max(prob_actual, 1.0 - prob_actual)),
+                "actual_winner": actual_winner,
+                "actual_method": _json_cell(row.get("method")),
+                "correct": bool(correct),
+                "model_probability_actual_winner": prob_actual,
+                "tree_probability_actual_winner": float(tree_p[i]),
+                "bayesian_probability_actual_winner": float(bayes_p[i]),
+            })
 
         return {
             "n_rows": int(n),
@@ -132,13 +183,19 @@ class Backtester:
                 "stacked": _metrics(y_cov, stacked_p),
             },
             "baseline_log_loss": float(log_loss(y_cov, np.full(len(y_cov), y_cov.mean()))),
+            "_past_predictions": past_predictions,
         }
 
-    def run_and_cache(self, df, path="models/backtest.json"):
+    def run_and_cache(self, df, path="models/backtest.json",
+                      predictions_path="models/past_predictions.json"):
         report = self.run(df)
+        past_predictions = report.pop("_past_predictions", [])
+        report["past_predictions_count"] = len(past_predictions)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as handle:
             json.dump(report, handle, indent=2)
+        with open(predictions_path, "w") as handle:
+            json.dump(past_predictions, handle, indent=2)
         return report
 
 

@@ -32,6 +32,10 @@ def main():
             print("DONE (scrape only)")
             return
 
+    print("=== Building deployable past-event archive ===", flush=True)
+    from past_events import build_past_events
+    build_past_events(log=lambda *a: print(*a, flush=True))
+
     print("=== Building point-in-time dataset + fighter states ===", flush=True)
     from ufcstats_dataset import build
     build(log=lambda *a: print(*a, flush=True))

@@ -45,7 +45,13 @@ def collect_events(client, log=print):
 
     for i, ev in enumerate(listing, 1):
         cached_fights = events_by_id.get(ev["id"], {}).get("fights", [])
-        if cached_fights and all(fight.get("fight_id") for fight in cached_fights):
+        if cached_fights and all(
+            fight.get("fight_id")
+            and fight.get("method")
+            and fight.get("round") is not None
+            and fight.get("time")
+            for fight in cached_fights
+        ):
             continue
         parsed = client.parse_event(ev["url"])
         if parsed:
@@ -134,10 +140,12 @@ def collect_fight_details(client, events, log=print, workers=None):
 def main():
     client = UFCStatsClient()
     events = collect_events(client, log=lambda *a: print(*a, flush=True))
+    from past_events import build_past_events
+    build_past_events(log=lambda *a: print(*a, flush=True))
     if "--events-only" not in sys.argv:
         collect_fighters(client, events, log=lambda *a: print(*a, flush=True))
-    if "--skip-details" not in sys.argv:
-        collect_fight_details(client, events, log=lambda *a: print(*a, flush=True))
+        if "--skip-details" not in sys.argv:
+            collect_fight_details(client, events, log=lambda *a: print(*a, flush=True))
     print("DONE")
 
 

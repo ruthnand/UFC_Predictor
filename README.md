@@ -9,14 +9,17 @@ betting odds, and model-driven matchup predictions.
 
 - **Fighter stats** by name (age, division, physique, record, strikes, offense, takedowns, KOs, submissions)
 - **Fight history** — full bout history (opponent, result, date, round, time, method, event)
+- **ESPN MMA enrichment** — fighter photos, records, physicals, camp, country, style, ESPN fight history, current cards, and news
 - **Fuzzy name lookup** — misspelled or reordered names are corrected against the UFC roster
 - **Rankings** — champion + top 15 for every division
 - **Events** — upcoming and past events, plus full per-event fight cards
+- **Past event archive** — 790 completed cards and 8,909 results with winners, losers, methods, rounds, and times
 - **Live odds** — MMA moneyline odds via The Odds API, de-vigged to implied probabilities
 - **Fight predictions** — two models with reasoning, built on **point-in-time features** (each fighter's Elo, recent form, streak, layoff, age, physicals, and per-minute offense/defense rates *as of the fight date* — no lookahead leakage):
   - **Gradient-boosted trees** (XGBoost, with a scikit-learn fallback), isotonic-calibrated → win probability + feature importances
   - **Bayesian logistic regression** (Laplace approximation) → win probability + 90% credible interval + per-feature log-odds contributions
-- **Web dashboard** — head-to-head predictor, event-card predictions vs. market odds, and rankings
+- **Past Results** — searchable walk-forward predictions compared with actual winners, plus an accuracy-by-year chart
+- **Web dashboard** — head-to-head predictor, event-card predictions vs. market odds, historical results, and rankings
 
 ## Quick start
 
@@ -26,21 +29,27 @@ pip install -r requirements.txt
 # (optional) enable live odds
 export ODDS_API_KEY=your_the_odds_api_key
 
-# train + backtest from the committed point-in-time dataset (fast)
-python train.py
-
 # run the app (dashboard at http://127.0.0.1:5000/)
+# uses committed models/ + fighter_state.json — no train step required
 python main.py
 ```
 
-To rebuild the dataset from scratch by re-scraping ufcstats.com (which sits behind
-a JavaScript anti-bot challenge), install the extra scraping deps and run the
-scrape step — otherwise `train.py` just uses the committed data:
+To **retrain** the models you need a local `ufc_pit_dataset.csv` (gitignored) or
+the ufcstats scrape caches. On a fresh clone, scrape once first (ufcstats.com sits
+behind a JavaScript anti-bot challenge):
 
 ```bash
 pip install -r requirements-train.txt
 python -m playwright install chromium
-python train.py --scrape      # solve challenge, scrape all events + fighters, rebuild, retrain
+python train.py --scrape      # scrape events + fighters, rebuild CSV, train + backtest
+```
+
+If you already have `ufc_pit_dataset.csv` (or the `ufcstats_*.json` caches), you can
+skip the scrape:
+
+```bash
+python train.py                # train + backtest from existing ufc_pit_dataset.csv
+python train.py --rebuild      # rebuild CSV from local ufcstats caches, then train
 ```
 
 > On macOS, port 5000 is often taken by AirPlay Receiver (empty 403s). Disable it
@@ -60,12 +69,19 @@ or split `firstName` / `middleName` / `lastName` params.
 | `GET /fighter` | Career stats and record |
 | `GET /fighter/history` | Full fight history |
 | `GET /fighter/profile` | Combined stats + fight history |
+| `GET /espn/fighters/search?q=..` | Search ESPN MMA fighter profiles |
+| `GET /espn/fighter?name=..` | ESPN profile, photo, bio fields, and fight history (also accepts `id`) |
+| `GET /espn/events` | Current ESPN UFC card and bout records |
+| `GET /espn/news` | Current ESPN MMA headlines (`limit` up to 25) |
 | `GET /rankings` | All divisions (or `?division=Lightweight`) |
 | `GET /events` | Upcoming + past events |
 | `GET /events/<slug>` | Full fight card for one event |
+| `GET /past-events` | Searchable/paginated completed event archive (`q`, `year`, `limit`, `offset`) |
+| `GET /past-events/<event_id>` | Every result from one completed event |
 | `GET /odds` | Live MMA moneyline odds (implied probabilities) |
 | `GET /predict?fighterA=..&fighterB=..` | Both models' predictions + reasoning + odds edge |
 | `GET /predict/event/<slug>` | Predictions for every bout on a card |
+| `GET /past-predictions` | Historical predictions vs. actual results (`fighter`, `event`, `year`, `correct`, `limit`, `offset` filters) |
 | `GET /backtest` | Forward-chaining model evaluation (accuracy, AUC, log-loss, Brier, calibration) |
 
 ### Examples
@@ -74,11 +90,24 @@ or split `firstName` / `middleName` / `lastName` params.
 /fighter?name=Jon Jones
 /fighter/history?name=Sean Strickland
 /fighter?name=shawn stricklan          # fuzzy → "Sean Strickland"
+/espn/fighter?name=Islam Makhachev
+/espn/fighters/search?q=Alex Pereira
+/espn/events
+/espn/news?limit=5
 /rankings?division=Lightweight
 /events
+/past-events?year=2025
+/past-events?q=Jon Jones
 /predict?fighterA=Islam Makhachev&fighterB=Ilia Topuria
 /predict/event/ufc-330
+/past-predictions?year=2025&correct=false
 ```
+
+The ESPN integration reads the structured public feeds used by
+`https://www.espn.com/mma/`, returns only normalized fields, and caches
+responses to avoid unnecessary traffic. These feeds are not a documented
+developer API, so their schema can change; keep UFCStats as the source for
+model-training strike and grappling data.
 
 ## How predictions work
 
@@ -168,8 +197,9 @@ The app runs under gunicorn: `gunicorn main:app --workers 1 --threads 4 --timeou
 (the long timeout accommodates live scraping). XGBoost loads natively on Render's
 Linux; locally it falls back to scikit-learn if OpenMP is missing.
 
-To retrain from the committed data, run `python train.py`. To rebuild everything by
-re-scraping ufcstats.com, run `python train.py --scrape` (needs
+Runtime needs only the committed models and caches above — no training step on
+deploy. To retrain locally, run `python train.py` when `ufc_pit_dataset.csv` is
+present, or `python train.py --scrape` on a fresh clone (needs
 `requirements-train.txt` + `playwright install chromium`).
 
 ## Data & caching
@@ -185,4 +215,4 @@ Rebuild-only (gitignored, regenerated by `train.py --scrape` / `train.py --rebui
 - `ufcstats_events.json` / `ufcstats_fighters.json` — event and fighter scrape caches
 - `ufcstats_fight_details.json` — per-fight control and strike-target totals
 - `ufcstats_cookie.json` — cached anti-bot clearance cookie
-- `ufc_pit_dataset.csv` — the built point-in-time training set
+- `ufc_pit_dataset.csv` — the built point-in-time training set (required for `train.py` without `--scrape`)

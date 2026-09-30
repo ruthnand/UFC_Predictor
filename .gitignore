@@ -322,17 +322,15 @@ cython_debug/
 
 
 # UFC API
-# The roster cache, stats cache, dataset, and trained models below are COMMITTED
-# on purpose so the deployed demo works immediately without a slow cold-start
-# scrape/train. Delete them locally to force a fresh rebuild (python train.py).
-#   active_fighters.json      - roster for fuzzy name matching
-#   fighter_stats_cache.json  - scraped stats used for predictions
-#   fight_dataset.csv         - built training set
-#   models/                   - trained models + backtest report
+# Runtime artifacts are COMMITTED so the deployed demo works without a cold-start
+# scrape/train: active_fighters.json, fighter_stats_cache.json, fighter_state.json,
+# and models/. Delete those locally only if you intend to rebuild them.
 
-# Rebuild-only / transient artifacts (not needed at runtime):
+# Rebuild-only / transient artifacts (not needed at runtime; regenerate with
+# python train.py --scrape or python train.py --rebuild):
 fight_history_cache.json
 fighter_stats.csv
+fight_dataset.csv
 ufc_pit_dataset.csv
 demo_*.png
 ufcstats_events.json

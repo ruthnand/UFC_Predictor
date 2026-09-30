@@ -6,7 +6,8 @@ Usage:
   python train.py --scrape       # re-scrape ufcstats (needs playwright), then rebuild
 
 The scrape step requires playwright + chromium (see requirements-train.txt); the
-served app only needs the committed models + fighter_state.json.
+served app only needs the committed models + fighter_state.json. The training CSV
+and ufcstats caches are gitignored rebuild artifacts — use --scrape on a fresh clone.
 """
 
 import os
@@ -18,6 +19,20 @@ from backtest import Backtester
 from models import FightPredictor
 
 CSV_PATH = "ufc_pit_dataset.csv"
+UFCSTATS_CACHES = (
+    "ufcstats_events.json",
+    "ufcstats_fighters.json",
+)
+
+
+def _require_nonempty(df):
+    if df is None or len(df) == 0:
+        raise SystemExit(
+            f"Training dataset is empty (no rows in {CSV_PATH}). "
+            "Run `python train.py --scrape` (needs requirements-train.txt + "
+            "`python -m playwright install chromium`) to fetch ufcstats data, "
+            "or place a non-empty ufc_pit_dataset.csv in the repo root."
+        )
 
 
 def main(rebuild=False, scrape=False):
@@ -28,12 +43,22 @@ def main(rebuild=False, scrape=False):
         rebuild = True
 
     if rebuild or not os.path.exists(CSV_PATH):
+        missing = [path for path in UFCSTATS_CACHES if not os.path.exists(path)]
+        if missing:
+            raise SystemExit(
+                f"Cannot rebuild: missing ufcstats caches ({', '.join(missing)}). "
+                "Run `python train.py --scrape` (needs requirements-train.txt + "
+                "`python -m playwright install chromium`), or provide a local "
+                f"{CSV_PATH} and run without --rebuild."
+            )
         print("Building point-in-time dataset from ufcstats caches...")
         from ufcstats_dataset import build
         df = build(log=lambda *a: print(*a, flush=True))
     else:
         print(f"Loading cached dataset {CSV_PATH}")
         df = pd.read_csv(CSV_PATH)
+
+    _require_nonempty(df)
 
     predictor = FightPredictor()
     metrics = predictor.train(df)

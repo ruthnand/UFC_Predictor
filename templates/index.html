@@ -6,7 +6,7 @@
 <title>UFC Predictor — Fight Models for Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Geist+Mono&display=swap" rel="stylesheet" />
 <style>
   :root {
     --bg: #07080c;
@@ -71,7 +71,7 @@
   }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: .04em; text-transform: uppercase; }
   .suggest-wrap { position: relative; }
-  input {
+  input, select {
     width: 100%; padding: 12px 14px; border-radius: 10px;
     border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
     font-size: 15px; font-family: inherit;
@@ -238,22 +238,56 @@
   }
   .stat .n { font-family: "Bebas Neue", sans-serif; font-size: 28px; color: var(--gold); }
   .stat .l { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .history-controls {
+    display: grid; grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 10px; align-items: end; margin: 16px 0;
+  }
+  .history-controls .go { margin: 0; }
+  .history-chart { display: grid; gap: 8px; margin-top: 14px; }
+  .year-row {
+    display: grid; grid-template-columns: 52px 1fr 112px;
+    gap: 10px; align-items: center; font-size: 13px;
+  }
+  .year-track {
+    height: 12px; border-radius: 8px; overflow: hidden; position: relative;
+    background: linear-gradient(90deg, #181b24 0 49.5%, #39404e 49.5% 50.5%, #181b24 50.5%);
+  }
+  .year-fill {
+    height: 100%; border-radius: 8px;
+    background: linear-gradient(90deg, var(--red), var(--gold));
+  }
+  .history-table-wrap { overflow-x: auto; }
+  .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .history-table th {
+    color: var(--muted); text-align: left; font-size: 11px;
+    letter-spacing: .06em; text-transform: uppercase; padding: 9px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .history-table td { padding: 10px 8px; border-bottom: 1px solid #222633; }
+  .result-good { color: var(--green); font-weight: 700; }
+  .result-bad { color: var(--red-soft); font-weight: 700; }
   .list { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.55; }
   .list li { margin: 6px 0; }
   @media (max-width: 760px) {
     header { flex-direction: column; align-items: flex-start; }
-    .row, .tape, .grid2, .stat-grid, .method-grid { grid-template-columns: 1fr; }
+    .row, .tape, .grid2, .stat-grid, .method-grid, .history-controls { grid-template-columns: 1fr; }
     .vs, .mid-vs { padding: 4px 0; }
     .tape-row { grid-template-columns: 1fr 70px 1fr; }
   }
 </style>
+<link rel="stylesheet" href="/static/site.css" />
 </head>
 <body>
 <header>
-  <h1 class="brand"><span class="u">UFC</span>PREDICTOR</h1>
+  <div class="brand" aria-label="UFC Fight Desk">
+    <span class="brand-mark">FD</span>
+    <span class="brand-copy"><small>UFC analytics</small>Fight Desk</span>
+  </div>
   <nav class="tabs">
     <button class="tab active" data-tab="predict">Head-to-Head</button>
-    <button class="tab" data-tab="events">Events</button>
+    <button class="tab" data-tab="events">Upcoming</button>
+    <button class="tab" data-tab="pastevents">Past Events</button>
+    <button class="tab" data-tab="history">Model Results</button>
     <button class="tab" data-tab="rankings">Rankings</button>
     <button class="tab" data-tab="about">About</button>
     <button class="tab" data-tab="backtest">Backtest</button>
@@ -262,26 +296,54 @@
 
 <div class="wrap">
   <section class="panel active" id="panel-predict">
-    <div class="search-card">
-      <h2>Call a matchup</h2>
-      <div class="row">
-        <div>
-          <label>Fighter A (red)</label>
-          <div class="suggest-wrap">
-            <input id="fa" placeholder="Search fighter…" value="Islam Makhachev" autocomplete="off" />
-            <div class="suggest" id="faSuggest"></div>
-          </div>
-        </div>
-        <div class="vs">VS</div>
-        <div>
-          <label>Fighter B (blue)</label>
-          <div class="suggest-wrap">
-            <input id="fb" placeholder="Search fighter…" value="Charles Oliveira" autocomplete="off" />
-            <div class="suggest" id="fbSuggest"></div>
-          </div>
+    <div class="landing-hero">
+      <div class="hero-copy">
+        <div class="mono eyebrow">Point-in-time fight intelligence</div>
+        <h1>Call the fight.<br><span>Show the evidence.</span></h1>
+        <p>Compare any two UFC fighters with calibrated tree and Bayesian models. A probability with its receipts—not a hot take.</p>
+        <div class="hero-signals">
+          <span><i></i> Models online</span>
+          <span>8,741 completed fights processed</span>
         </div>
       </div>
-      <button class="go" id="predictBtn">Run models</button>
+
+      <div class="matchup-console">
+        <div class="console-head">
+          <div>
+            <span class="mono">New matchup</span>
+            <h2>Build a fight card</h2>
+          </div>
+          <span class="console-status mono">Ensemble · live</span>
+        </div>
+        <div class="row">
+          <div>
+            <label>Red corner</label>
+            <div class="suggest-wrap">
+              <input id="fa" placeholder="Search fighter…" value="Islam Makhachev" autocomplete="off" />
+              <div class="suggest" id="faSuggest"></div>
+            </div>
+          </div>
+          <div class="vs">VS</div>
+          <div>
+            <label>Blue corner</label>
+            <div class="suggest-wrap">
+              <input id="fb" placeholder="Search fighter…" value="Charles Oliveira" autocomplete="off" />
+              <div class="suggest" id="fbSuggest"></div>
+            </div>
+          </div>
+        </div>
+        <button class="go" id="predictBtn">Run fight model <span aria-hidden="true">→</span></button>
+        <div class="console-foot mono">
+          <span>CatBoost</span><span>Bayesian logistic</span><span>Glicko-2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="evidence-rail" aria-label="Model evidence">
+      <div><strong>62.0%</strong><span>Walk-forward accuracy</span></div>
+      <div><strong>4,368</strong><span>Out-of-time predictions</span></div>
+      <div><strong>3</strong><span>Finish outcomes modeled</span></div>
+      <div class="rail-note"><span class="mono">No lookahead</span><p>Every backtest fight is predicted using only earlier bouts.</p></div>
     </div>
     <div id="predictOut"></div>
   </section>
@@ -292,6 +354,61 @@
       <div id="eventsList" class="spinner">Loading events…</div>
     </div>
     <div id="eventOut"></div>
+  </section>
+
+  <section class="panel" id="panel-pastevents">
+    <div class="search-card">
+      <h2>Completed UFC event cards</h2>
+      <p class="muted">Browse every archived card with winners, losers, methods, rounds, and finish times.</p>
+      <div class="past-event-controls">
+        <div>
+          <label>Search event, location, or fighter</label>
+          <input id="pastEventSearch" placeholder="e.g. UFC 300 or Jon Jones" />
+        </div>
+        <div>
+          <label>Year</label>
+          <select id="pastEventYear"><option value="">All years</option></select>
+        </div>
+        <button class="go" id="pastEventApply">Search cards</button>
+      </div>
+      <div id="pastEventSummary" class="muted"></div>
+    </div>
+    <div class="past-event-layout">
+      <div class="past-event-index">
+        <div id="pastEventsList" class="spinner">Loading past events…</div>
+        <button class="load-more" id="pastEventsMore" hidden>Load more events</button>
+      </div>
+      <div id="pastEventOut" class="past-event-empty">
+        Select an event to see its complete results.
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-history">
+    <div class="search-card">
+      <h2>Past predictions vs. actual results</h2>
+      <p class="muted">Every pick shown here was generated with walk-forward testing: the model only trained on fights that happened earlier.</p>
+      <div class="history-controls">
+        <div>
+          <label>Search fighter</label>
+          <input id="historyFighter" placeholder="e.g. Jon Jones" />
+        </div>
+        <div>
+          <label>Year</label>
+          <select id="historyYear"><option value="">All years</option></select>
+        </div>
+        <div>
+          <label>Result</label>
+          <select id="historyResult">
+            <option value="">All picks</option>
+            <option value="true">Correct only</option>
+            <option value="false">Incorrect only</option>
+          </select>
+        </div>
+        <button class="go" id="historyApply">Apply filters</button>
+      </div>
+    </div>
+    <div id="historyOut" class="spinner">Loading historical predictions…</div>
   </section>
 
   <section class="panel" id="panel-rankings">
@@ -315,6 +432,9 @@
 
 <script>
 const pct = (x) => x == null || Number.isNaN(x) ? "—" : `${(x * 100).toFixed(1)}%`;
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[c]));
 const el = (tag, cls, html) => {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -330,6 +450,8 @@ document.querySelectorAll(".tab").forEach(tab => {
     tab.classList.add("active");
     document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
     if (tab.dataset.tab === "events") loadEvents();
+    if (tab.dataset.tab === "pastevents") loadPastEvents();
+    if (tab.dataset.tab === "history") loadHistory();
     if (tab.dataset.tab === "rankings") loadRankings();
     if (tab.dataset.tab === "about") loadAbout();
     if (tab.dataset.tab === "backtest") loadBacktest();
@@ -495,7 +617,10 @@ document.getElementById("predictBtn").onclick = () => {
   if (a && b) runPredict(a, b, document.getElementById("predictOut"));
 };
 
-let eventsLoaded = false, rankingsLoaded = false, aboutLoaded = false, backtestLoaded = false;
+let eventsLoaded = false, pastEventsLoaded = false, pastEventYearsLoaded = false;
+let pastEventsOffset = 0, pastEventsHasMore = false;
+let historyLoaded = false, historyYearsLoaded = false;
+let rankingsLoaded = false, aboutLoaded = false, backtestLoaded = false;
 
 async function loadEvents() {
   if (eventsLoaded) return; eventsLoaded = true;
@@ -529,6 +654,198 @@ async function predictEvent(slug, name) {
     });
   } catch (e) { out.innerHTML = `<div class="muted">Failed: ${e}</div>`; }
 }
+
+async function loadPastEvents(reset = false) {
+  if (pastEventsLoaded && !reset) return;
+  const list = document.getElementById("pastEventsList");
+  const more = document.getElementById("pastEventsMore");
+  if (reset) {
+    pastEventsOffset = 0;
+    list.innerHTML = "";
+    const out = document.getElementById("pastEventOut");
+    out.className = "past-event-empty";
+    out.textContent = "Select an event to see its complete results.";
+  }
+  pastEventsLoaded = true;
+  more.hidden = true;
+  if (!list.children.length) {
+    list.className = "spinner";
+    list.textContent = "Loading past events…";
+  }
+
+  const params = new URLSearchParams({limit: "30", offset: String(pastEventsOffset)});
+  const query = document.getElementById("pastEventSearch").value.trim();
+  const year = document.getElementById("pastEventYear").value;
+  if (query) params.set("q", query);
+  if (year) params.set("year", year);
+
+  try {
+    const response = await fetch(`/past-events?${params}`);
+    const data = await response.json();
+    if (!response.ok || data.error) throw new Error(data.error || "Request failed");
+
+    if (!pastEventYearsLoaded) {
+      const yearSelect = document.getElementById("pastEventYear");
+      (data.years || []).forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        yearSelect.appendChild(option);
+      });
+      pastEventYearsLoaded = true;
+    }
+
+    if (pastEventsOffset === 0) list.innerHTML = "";
+    list.className = "";
+    (data.events || []).forEach(event => {
+      const row = el("button", "event-item past-event-item");
+      row.type = "button";
+      row.innerHTML = `
+        <div>
+          <div class="title">${esc(event.name)}</div>
+          <div class="muted">${esc(event.date)} · ${esc(event.location || "Location unavailable")}</div>
+        </div>
+        <span class="pill">${event.fight_count} fights</span>`;
+      row.onclick = () => loadPastEventCard(event.event_id, row);
+      list.appendChild(row);
+    });
+    if (!(data.events || []).length && pastEventsOffset === 0) {
+      list.innerHTML = `<div class="past-event-empty">No event cards match those filters.</div>`;
+    }
+
+    document.getElementById("pastEventSummary").textContent =
+      `${data.total.toLocaleString()} matching events · ${data.all_event_count.toLocaleString()} cards and ${data.all_fight_count.toLocaleString()} fights in the archive`;
+    pastEventsOffset += (data.events || []).length;
+    pastEventsHasMore = data.has_more;
+    more.hidden = !pastEventsHasMore;
+  } catch (error) {
+    list.className = "";
+    list.innerHTML = `<div class="past-event-empty">Failed to load past events: ${esc(error.message || error)}</div>`;
+  }
+}
+
+async function loadPastEventCard(eventId, selectedRow) {
+  document.querySelectorAll(".past-event-item").forEach(row => row.classList.remove("selected"));
+  if (selectedRow) selectedRow.classList.add("selected");
+  const out = document.getElementById("pastEventOut");
+  out.className = "spinner";
+  out.textContent = "Loading complete fight card…";
+  try {
+    const response = await fetch(`/past-events/${encodeURIComponent(eventId)}`);
+    const event = await response.json();
+    if (!response.ok || event.error) throw new Error(event.error || "Request failed");
+    const fights = (event.fights || []).map((fight, index) => {
+      const isDraw = !fight.winner;
+      return `
+        <div class="result-bout">
+          <div class="result-order mono">${String(index + 1).padStart(2, "0")}</div>
+          <div class="result-matchup">
+            ${isDraw
+              ? `<strong>${esc(fight.fighter_1)} <span class="muted">vs.</span> ${esc(fight.fighter_2)}</strong><span class="draw-label">${esc(fight.result || "Draw")}</span>`
+              : `<strong><span class="winner-mark">W</span>${esc(fight.winner)}</strong><span><span class="loser-mark">L</span>${esc(fight.loser)}</span>`}
+          </div>
+          <div class="result-detail">
+            <strong>${esc(fight.method)}</strong>
+            <span>${esc(fight.weight_class || "—")} · R${esc(fight.round)} · ${esc(fight.time)}</span>
+          </div>
+        </div>`;
+    }).join("");
+    out.className = "past-event-card";
+    out.innerHTML = `
+      <div class="past-event-card-head">
+        <div class="mono">Completed event · ${event.fight_count} fights</div>
+        <h2>${esc(event.name)}</h2>
+        <p>${esc(event.date)} · ${esc(event.location || "Location unavailable")}</p>
+      </div>
+      <div class="result-bouts">${fights}</div>`;
+  } catch (error) {
+    out.className = "past-event-empty";
+    out.textContent = `Failed to load this card: ${error.message || error}`;
+  }
+}
+
+document.getElementById("pastEventApply").onclick = () => loadPastEvents(true);
+document.getElementById("pastEventsMore").onclick = () => {
+  pastEventsLoaded = false;
+  loadPastEvents();
+};
+document.getElementById("pastEventSearch").addEventListener("keydown", event => {
+  if (event.key === "Enter") loadPastEvents(true);
+});
+
+async function loadHistory(force = false) {
+  if (historyLoaded && !force) return;
+  historyLoaded = true;
+  const out = document.getElementById("historyOut");
+  const fighter = document.getElementById("historyFighter").value.trim();
+  const year = document.getElementById("historyYear").value;
+  const correct = document.getElementById("historyResult").value;
+  const params = new URLSearchParams({limit: "150"});
+  if (fighter) params.set("fighter", fighter);
+  if (year) params.set("year", year);
+  if (correct) params.set("correct", correct);
+  out.className = "spinner";
+  out.innerHTML = "Loading historical predictions…";
+
+  try {
+    const response = await fetch(`/past-predictions?${params}`);
+    const d = await response.json();
+    if (!response.ok || d.error) throw new Error(d.error || "Request failed");
+
+    if (!historyYearsLoaded && !fighter && !year && !correct) {
+      const yearSelect = document.getElementById("historyYear");
+      [...(d.by_year || [])].reverse().forEach(row => {
+        yearSelect.appendChild(el("option", null, esc(row.year)));
+      });
+      historyYearsLoaded = true;
+    }
+
+    const s = d.summary || {};
+    const chart = (d.by_year || []).slice(-12).map(row => `
+      <div class="year-row">
+        <b>${esc(row.year)}</b>
+        <div class="year-track"><div class="year-fill" style="width:${Math.max(0, Math.min(100, row.accuracy * 100))}%"></div></div>
+        <span>${pct(row.accuracy)} · ${row.total} fights</span>
+      </div>`).join("");
+    const rows = (d.results || []).map(row => `
+      <tr>
+        <td>${esc(row.date)}<br><span class="muted">${esc(row.event)}</span></td>
+        <td><b>${esc(row.predicted_winner)}</b><br><span class="muted">${pct(row.predicted_probability)}</span></td>
+        <td><b>${esc(row.actual_winner)}</b><br><span class="muted">${esc(row.actual_method || "—")}</span></td>
+        <td class="${row.correct ? "result-good" : "result-bad"}">${row.correct ? "✓ Correct" : "✕ Miss"}</td>
+      </tr>`).join("");
+
+    out.className = "";
+    out.innerHTML = `
+      <div class="fight-card">
+        <div class="stat-grid">
+          <div class="stat"><div class="n">${pct(s.accuracy)}</div><div class="l">Walk-forward accuracy</div></div>
+          <div class="stat"><div class="n">${s.correct ?? 0}</div><div class="l">Correct picks</div></div>
+          <div class="stat"><div class="n">${s.total ?? 0}</div><div class="l">Fights evaluated</div></div>
+        </div>
+        <h3>Accuracy by year</h3>
+        <div class="history-chart">${chart || `<span class="muted">No yearly data for these filters.</span>`}</div>
+      </div>
+      <div class="fight-card">
+        <h3 style="margin-top:0">Prediction history</h3>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead><tr><th>Event</th><th>Model pick</th><th>Actual result</th><th>Outcome</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" class="muted">No matching fights found.</td></tr>`}</tbody>
+          </table>
+        </div>
+        <p class="muted">Showing up to 150 most recent matching fights. ${esc(d.methodology)}</p>
+      </div>`;
+  } catch (e) {
+    out.className = "";
+    out.innerHTML = `<div class="fight-card muted">Failed to load past predictions: ${esc(e.message || e)}</div>`;
+  }
+}
+
+document.getElementById("historyApply").onclick = () => loadHistory(true);
+document.getElementById("historyFighter").addEventListener("keydown", event => {
+  if (event.key === "Enter") loadHistory(true);
+});
 
 async function loadRankings() {
   if (rankingsLoaded) return; rankingsLoaded = true;

@@ -134,7 +134,7 @@ def build(log=print):
                 continue
             if not f.get("f1_id") or not f.get("f2_id"):
                 continue
-            fights.append((d, f))
+            fights.append((d, ev, f))
     fights.sort(key=lambda x: x[0])
     log(f"Completed fights: {len(fights)}")
 
@@ -147,7 +147,7 @@ def build(log=print):
 
     cols = all_feature_names()
     rows = []
-    for d, f in fights:
+    for d, ev, f in fights:
         a_id, b_id = f["f1_id"], f["f2_id"]
         ra = get_raw(a_id, f.get("f1_name"))
         rb = get_raw(b_id, f.get("f2_name"))
@@ -160,6 +160,9 @@ def build(log=print):
                 "date": d,
                 "f1_name": f.get("f1_name"),
                 "f2_name": f.get("f2_name"),
+                "event_id": ev.get("id"),
+                "event_name": ev.get("name"),
+                "fight_id": f.get("fight_id"),
                 "weight_class": f.get("weight_class"),
                 "method": method,
             }
