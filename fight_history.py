@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 
+from name_normalization import fighter_name_slug
+
 
 class FightHistoryExtractor:
     """Scrapes a fighter's full bout history from their ufc.com athlete page.
@@ -22,11 +24,8 @@ class FightHistoryExtractor:
         self.max_pages = max_pages
 
     def build_slug(self, first_name, middle_name, last_name):
-        parts = [first_name]
-        if middle_name and middle_name not in ("", "&"):
-            parts.append(middle_name)
-        parts.append(last_name)
-        return "-".join(p.strip().lower() for p in parts if p and p.strip())
+        middle = None if middle_name in (None, "", "&") else middle_name
+        return fighter_name_slug(first_name, middle, last_name)
 
     def _text(self, node):
         return node.get_text(strip=True) if node else None

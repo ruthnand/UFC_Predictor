@@ -6,6 +6,7 @@ from difflib import SequenceMatcher
 import requests
 
 from all_active_fighter import ActiveFighterNameExtractor
+from name_normalization import fighter_name_slug, normalize_fighter_name
 
 
 class FighterNameResolver:
@@ -33,11 +34,8 @@ class FighterNameResolver:
         self.cache_ttl_seconds = cache_ttl_seconds
 
     def build_slug(self, first_name, middle_name, last_name):
-        parts = [first_name]
-        if middle_name and middle_name not in ("", "&"):
-            parts.append(middle_name)
-        parts.append(last_name)
-        return "-".join(p.strip().lower() for p in parts if p and p.strip())
+        middle = None if middle_name in (None, "", "&") else middle_name
+        return fighter_name_slug(first_name, middle, last_name)
 
     def page_exists(self, first_name, middle_name, last_name):
         slug = self.build_slug(first_name, middle_name, last_name)
@@ -96,13 +94,13 @@ class FighterNameResolver:
     def fuzzy_match(self, name, cutoff=0.8):
         if not name or not name.strip():
             return None
-        query = " ".join(name.lower().split())
+        query = normalize_fighter_name(name)
         query_sorted = " ".join(sorted(query.split()))
 
         best_record = None
         best_score = 0.0
         for record in self.get_roster():
-            full = record["full"].lower()
+            full = normalize_fighter_name(record["full"])
             # Compare both as-is and with tokens sorted, so "strickland sean"
             # still matches "sean strickland".
             score = max(
@@ -126,9 +124,9 @@ class FighterNameResolver:
 
         if self.page_exists(first_name, middle_name, last_name):
             return {
-                "first": (first_name or "").strip().lower(),
-                "middle": (middle_name or "").strip().lower(),
-                "last": (last_name or "").strip().lower(),
+                "first": normalize_fighter_name(first_name),
+                "middle": normalize_fighter_name(middle_name),
+                "last": normalize_fighter_name(last_name),
                 "full": query,
                 "exact": True,
                 "query": query,
@@ -137,9 +135,9 @@ class FighterNameResolver:
         match = self.fuzzy_match(query, cutoff=cutoff)
         if match and self.page_exists(match["first"], match["middle"], match["last"]):
             return {
-                "first": match["first"].strip().lower(),
-                "middle": match["middle"].strip().lower(),
-                "last": match["last"].strip().lower(),
+                "first": normalize_fighter_name(match["first"]),
+                "middle": normalize_fighter_name(match["middle"]),
+                "last": normalize_fighter_name(match["last"]),
                 "full": match["full"],
                 "exact": False,
                 "query": query,

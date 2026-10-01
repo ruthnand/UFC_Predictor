@@ -4,6 +4,7 @@ import os
 from datetime import date, datetime
 
 from models import FightPredictor
+from name_normalization import normalize_fighter_name
 from odds import OddsProvider
 from pit_features import build_vector, state_to_features
 
@@ -53,7 +54,7 @@ class PredictionService:
             name = (st.get("name") or "").strip()
             if not name:
                 continue
-            key = name.lower()
+            key = normalize_fighter_name(name)
             if key not in best or (st.get("experience") or 0) > (self.states[best[key]].get("experience") or 0):
                 best[key] = fid
         self.name_to_id = best
@@ -80,10 +81,22 @@ class PredictionService:
         q = (query or "").strip()
         if not q:
             return []
-        q_lower = q.lower()
-        starts = [n for n in self.names if n.lower().startswith(q_lower)]
-        contains = [n for n in self.names if q_lower in n.lower() and n not in starts]
-        fuzzy = difflib.get_close_matches(q, self.names, n=limit, cutoff=0.6)
+        query_key = normalize_fighter_name(q)
+        starts = [
+            name for name in self.names
+            if normalize_fighter_name(name).startswith(query_key)
+        ]
+        contains = [
+            name for name in self.names
+            if query_key in normalize_fighter_name(name) and name not in starts
+        ]
+        fuzzy_keys = difflib.get_close_matches(
+            query_key, list(self.name_to_id), n=limit, cutoff=0.6
+        )
+        fuzzy = [
+            self.states[self.name_to_id[key]].get("name")
+            for key in fuzzy_keys
+        ]
         ordered = []
         for name in starts + contains + fuzzy:
             if name not in ordered:
@@ -92,7 +105,7 @@ class PredictionService:
                 break
         out = []
         for name in ordered:
-            fid = self.name_to_id.get(name.lower())
+            fid = self.name_to_id.get(normalize_fighter_name(name))
             st = self.states.get(fid, {})
             out.append({
                 "name": name,
@@ -105,7 +118,7 @@ class PredictionService:
     def _resolve(self, name):
         if not name:
             return None
-        key = name.strip().lower()
+        key = normalize_fighter_name(name)
         if key in self.name_to_id:
             fid = self.name_to_id[key]
             return {
@@ -114,11 +127,14 @@ class PredictionService:
                 "matched": self.states[fid].get("name"),
                 "score": 1.0,
             }
-        match = difflib.get_close_matches(name.strip(), self.names, n=1, cutoff=0.82)
-        if not match:
+        matches = difflib.get_close_matches(
+            key, list(self.name_to_id), n=1, cutoff=0.82
+        )
+        if not matches:
             return None
-        fid = self.name_to_id[match[0].lower()]
-        score = difflib.SequenceMatcher(None, key, match[0].lower()).ratio()
+        matched_key = matches[0]
+        fid = self.name_to_id[matched_key]
+        score = difflib.SequenceMatcher(None, key, matched_key).ratio()
         return {
             "id": fid,
             "state": self.states[fid],

@@ -7,6 +7,7 @@ import re
 import sys
 from top_fighters import UFCRankingScraper
 from fight_history import FightHistoryExtractor
+from name_normalization import fighter_name_slug
 import csv
 import pandas as pd
 
@@ -15,10 +16,9 @@ class FighterStatsExtractor:
     def __init__(self):
         pass
     def find_available_bio_info(self, fighterFirstName, fighterMiddleName, fighterLastName):
-        if fighterMiddleName is None or fighterMiddleName == '' or fighterMiddleName == '&':
-            url = f'https://www.ufc.com/athlete/{fighterFirstName}-{fighterLastName}'
-        else:
-            url = f'https://www.ufc.com/athlete/{fighterFirstName}-{fighterMiddleName}-{fighterLastName}'
+        middle = None if fighterMiddleName in (None, "", "&") else fighterMiddleName
+        slug = fighter_name_slug(fighterFirstName, middle, fighterLastName)
+        url = f'https://www.ufc.com/athlete/{slug}'
         headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
@@ -84,10 +84,9 @@ class FighterStatsExtractor:
         return cleaned_sentence
 
     def get_fighter_stats(self,fighterFirstName,fighterMiddleName,fighterLastName):
-        if fighterMiddleName is None or fighterMiddleName == '' or fighterMiddleName == '&':
-            url = f'https://www.ufc.com/athlete/{fighterFirstName}-{fighterLastName}'
-        else:
-            url = f'https://www.ufc.com/athlete/{fighterFirstName}-{fighterMiddleName}-{fighterLastName}'
+        middle = None if fighterMiddleName in (None, "", "&") else fighterMiddleName
+        slug = fighter_name_slug(fighterFirstName, middle, fighterLastName)
+        url = f'https://www.ufc.com/athlete/{slug}'
         headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }

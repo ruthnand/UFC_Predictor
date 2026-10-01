@@ -12,6 +12,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from name_normalization import normalize_fighter_name
+
 
 class ESPNDataError(RuntimeError):
     """Raised when ESPN data is unavailable or has an unexpected shape."""
@@ -79,7 +81,7 @@ class ESPNMMAScraper:
 
     @staticmethod
     def _normalized_name(value):
-        return re.sub(r"[^a-z0-9]+", "", (value or "").lower())
+        return normalize_fighter_name(value).replace(" ", "")
 
     def search_fighters(self, query, limit=10):
         query = (query or "").strip()
